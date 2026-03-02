@@ -1,0 +1,205 @@
+/* --- GLOBAL RESET --- */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+/* --- LOGIN PAGE (CENTERED) --- */
+.login-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #2c3e50 0%, #4ca1af 100%);
+}
+
+.login-wrapper {
+    text-align: center;
+    width: 100%;
+    max-width: 450px;
+}
+
+.main-title {
+    color: white;
+    font-size: 2.8rem;
+    margin-bottom: 30px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.login-container {
+    background: white;
+    padding: 50px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.login-container h2 {
+    margin-top: 0;
+    color: #2c3e50;
+    margin-bottom: 25px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 15px;
+    margin: 12px 0;
+    font-size: 1.1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box; /* Crucial for width */
+    transition: border 0.3s;
+}
+
+.input-group input:focus {
+    border-color: #3498db;
+    outline: none;
+}
+
+.login-btn {
+    width: 100%;
+    padding: 15px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: background 0.3s;
+}
+
+.login-btn:hover {
+    background-color: #2980b9;
+}
+
+/* --- DASHBOARD HEADER --- */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #2c3e50;
+    color: white;
+    padding: 15px 50px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.dashboard-header h1 {
+    font-size: 1.5rem;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.header-tools {
+    display: flex;
+    gap: 15px;
+    flex-grow: 0.8; /* Stretches the search tools */
+}
+
+/* --- SEARCH & CATEGORY --- */
+.search-input {
+    flex-grow: 2; /* This makes the search bar extra long */
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 1rem;
+    background: #ffffff;
+}
+
+.category-select {
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: none;
+    background: #ecf0f1;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.search-btn {
+    padding: 10px 25px;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* --- MAIN CONTAINER --- */
+.container {
+    max-width: 1100px;
+    margin: 30px auto;
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+/* --- UPLOAD SECTION --- */
+.upload-section {
+    background: #fdfdfd;
+    padding: 20px;
+    border: 1px dashed #ccc;
+    border-radius: 10px;
+    margin-bottom: 40px;
+}
+
+.upload-inline {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.upload-inline input[type="text"], 
+.upload-inline select {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    flex: 1;
+}
+
+.upload-inline button {
+    padding: 10px 20px;
+    background: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* --- MINIMALIST ASSET LIST --- */
+.list-container {
+    margin-top: 20px;
+}
+
+.asset-item {
+    padding: 20px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.2s ease;
+}
+
+.asset-item:last-child {
+    border-bottom: none;
+}
+
+.asset-item:hover {
+    background-color: #f9fbfd;
+    padding-left: 25px; /* Subtle movement on hover */
+}
+
+.file-link {
+    text-decoration: none;
+    color: #2c3e50;
+    font-size: 1.3rem;
+    font-weight: 500;
+    display: block; /* Clicking anywhere on the line works */
+    transition: color 0.2s;
+}
+
+.file-link:hover {
+    color: #3498db;
+}

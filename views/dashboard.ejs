@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard - Asset Management</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <header class="dashboard-header">
+        <h1>Digital Asset Locker</h1>
+        
+        <form action="/dashboard" method="GET" class="header-tools">
+            <input type="text" name="search" placeholder="Search your assets..." class="search-input">
+            
+            <select name="category" class="category-select" onchange="this.form.submit()">
+                <option value="All">All Categories</option>
+                <option value="PDFs">PDFs</option>
+                <option value="Certificates">Certificates</option>
+                <option value="Personal ID">Personal ID</option>
+                <option value="Financial">Financial Docs</option>
+                <option value="Photos">Photos/Images</option>
+                <option value="Classifications">Classifications</option>
+            </select>
+            <button type="submit" class="search-btn">Search</button>
+        </form>
+    </header>
+
+    <div class="container">
+        <section class="upload-section">
+            <form action="/upload" method="POST" enctype="multipart/form-data" class="upload-inline">
+                <input type="text" name="title" placeholder="Document Name" required>
+                <select name="category" required>
+                    <option value="PDFs">PDFs</option>
+                    <option value="Certificates">Certificates</option>
+                    <option value="Personal ID">Personal ID</option>
+                    <option value="Financial">Financial Docs</option>
+                    <option value="Photos">Photos/Images</option>
+                    <option value="Classifications">Classifications</option>
+                </select>
+                <input type="file" name="file" required>
+                <button type="submit">Save</button>
+            </form>
+        </section>
+
+        <hr>
+
+        <main class="asset-list">
+            <h3>My Documents</h3>
+            <div class="list-container">
+                <% assets.forEach(asset => { %>
+                    <div class="asset-item">
+                        <a href="/<%= asset.filePath %>" target="_blank" class="file-link">
+                            <%= asset.filename %>
+                        </a>
+                    </div>
+                <% }) %>
+                <% if(assets.length === 0) { %>
+                    <p>No documents found.</p>
+                <% } %>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
