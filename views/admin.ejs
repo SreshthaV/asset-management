@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="dashboard-header">
+    <h1>⚙️ Admin Panel</h1>
+    <div class="header-user">
+      <span><%= user.email %></span>
+      <a href="/dashboard" class="logout-link">Dashboard</a>
+      <a href="/logout" class="logout-link">Logout</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="section-card">
+      <div class="section-card-header">👥 User Management</div>
+      <table>
+        <thead>
+          <tr><th>Email</th><th>Role</th><th>First Login?</th><th>Joined</th><th>Change Role</th></tr>
+        </thead>
+        <tbody>
+          <% users.forEach(u => { %>
+          <tr>
+            <td><%= u.email %></td>
+            <td><span class="badge"><%= u.role %></span></td>
+            <td><%= u.first_login ? '⏳ Pending' : '✅ Done' %></td>
+            <td><%= new Date(u.created_at).toLocaleDateString() %></td>
+            <td>
+              <form action="/admin/users/<%= u.id %>/role" method="POST" class="role-form">
+                <select name="role">
+                  <option value="user" <%= u.role === 'user' ? 'selected' : '' %>>user</option>
+                  <option value="admin" <%= u.role === 'admin' ? 'selected' : '' %>>admin</option>
+                </select>
+                <button type="submit">Update</button>
+              </form>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-card">
+      <div class="section-card-header">📄 SQL File Editor</div>
+      <div class="section-card-body">
+        <% if (sqlFiles.length === 0) { %>
+          <p style="color:#718096;">No .sql files found in the /database folder.</p>
+        <% } else { %>
+          <% sqlFiles.forEach(file => { %>
+            <a href="/admin/sql/<%= file %>" class="sql-file-link">✏️ <%= file %></a>
+          <% }) %>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

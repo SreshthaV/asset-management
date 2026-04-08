@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Files - Digital Asset Locker</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: #f5f5f7; }
+
+    .sidebar {
+      width: 72px; min-height: 100vh; background: #1a1132;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 16px 0; gap: 4px; position: fixed; left: 0; top: 0; z-index: 100;
+    }
+    .sidebar-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: #7c5cfc; color: #fff; font-size: 16px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px; text-decoration: none;
+    }
+    .sidebar-item {
+      width: 48px; height: 48px; border-radius: 12px; border: none; cursor: pointer;
+      background: transparent; color: #a99cc5;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 3px; transition: all 0.2s;
+      text-decoration: none; font-size: 9px;
+    }
+    .sidebar-item:hover, .sidebar-item.active { background: #2d2250; color: #fff; }
+    .sidebar-spacer { flex: 1; }
+
+    .main { margin-left: 72px; }
+    .topbar {
+      position: fixed; top: 0; left: 72px; right: 0; height: 56px;
+      background: #fff; border-bottom: 1px solid #ececec;
+      display: flex; align-items: center; padding: 0 32px; gap: 16px; z-index: 50;
+    }
+    .topbar h1 { font-size: 18px; font-weight: 700; color: #1a1132; flex: 1; }
+    .search-box {
+      display: flex; align-items: center; gap: 8px;
+      background: #f5f3ff; border-radius: 10px; padding: 8px 14px; border: 1px solid #ede8ff;
+    }
+    .search-box input {
+      border: none; background: transparent; outline: none;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; color: #1a1132; width: 180px;
+    }
+    .topbar-btn {
+      padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+      display: flex; align-items: center; gap: 6px; transition: all 0.2s; text-decoration: none;
+    }
+    .btn-upload { background: #7c5cfc; color: #fff; }
+    .btn-upload:hover { background: #6b4ef0; }
+
+    .content { margin-top: 56px; padding: 32px; }
+
+    /* FILTER TABS */
+    .filter-tabs {
+      display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap;
+    }
+    .filter-tab {
+      padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
+      border: 1.5px solid #e0daf0; background: #fff; color: #4a4a6a;
+      cursor: pointer; transition: all 0.2s; text-decoration: none;
+    }
+    .filter-tab:hover { border-color: #7c5cfc; color: #7c5cfc; }
+    .filter-tab.active { background: #7c5cfc; color: #fff; border-color: #7c5cfc; }
+
+    /* FILES GRID */
+    .files-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;
+    }
+    .file-card {
+      background: #fff; border-radius: 14px; padding: 20px 16px;
+      box-shadow: 0 2px 8px rgba(26,17,50,0.04); transition: all 0.2s;
+      cursor: pointer; text-decoration: none; display: block; border: 1.5px solid transparent;
+    }
+    .file-card:hover { border-color: #c4b5fd; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(124,92,252,0.1); }
+    .file-card-icon { font-size: 36px; margin-bottom: 12px; }
+    .file-card-name {
+      font-size: 13px; font-weight: 600; color: #1a1132;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px;
+    }
+    .file-card-meta { font-size: 11px; color: #a99cc5; }
+    .file-card-badge {
+      display: inline-block; font-size: 10px; font-weight: 700; padding: 3px 8px;
+      border-radius: 20px; background: #f0ecf7; color: #7c5cfc; margin-top: 8px;
+    }
+
+    /* FILES TABLE */
+    .files-table { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(26,17,50,0.04); }
+    .table-header {
+      display: flex; padding: 14px 24px; border-bottom: 1px solid #f5f3ff;
+      font-size: 11px; font-weight: 700; color: #a99cc5; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .table-row {
+      display: flex; align-items: center; padding: 14px 24px;
+      border-bottom: 1px solid #f9f7ff; transition: background 0.15s; gap: 12px;
+    }
+    .table-row:last-child { border-bottom: none; }
+    .table-row:hover { background: #faf8ff; }
+    .col-icon { width: 40px; flex-shrink: 0; }
+    .col-name { flex: 1; min-width: 0; }
+    .col-cat { width: 140px; flex-shrink: 0; }
+    .col-date { width: 120px; flex-shrink: 0; color: #a99cc5; font-size: 12px; }
+    .file-icon-sm {
+      width: 36px; height: 36px; border-radius: 8px; background: #f0ecf7;
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+    }
+    .file-link {
+      font-size: 14px; font-weight: 600; color: #1a1132; text-decoration: none;
+      display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .file-link:hover { color: #7c5cfc; }
+    .badge {
+      font-size: 11px; font-weight: 600; padding: 4px 10px;
+      border-radius: 20px; background: #f0ecf7; color: #7c5cfc;
+    }
+    .view-toggle { display: flex; gap: 4px; }
+    .view-btn {
+      width: 34px; height: 34px; border-radius: 8px; border: 1.5px solid #e0daf0;
+      background: #fff; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; color: #a99cc5; transition: all 0.2s;
+    }
+    .view-btn.active, .view-btn:hover { background: #f0ecf7; color: #7c5cfc; border-color: #c4b5fd; }
+
+    .section-label { font-size: 16px; font-weight: 700; color: #1a1132; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+    .empty-state { text-align: center; padding: 60px; color: #a99cc5; }
+    .empty-state div { font-size: 48px; margin-bottom: 12px; }
+    .col-actions { width: 120px; flex-shrink: 0; display: flex; gap: 4px; justify-content: flex-end; align-items: center; }
+    .status-badge { font-size:10px; font-weight:700; padding:3px 8px; border-radius:20px; flex-shrink:0; }
+    .action-btn {
+      width: 28px; height: 28px; border-radius: 7px; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+    }
+    .btn-edit-sm  { background: #f0ecf7; color: #7c5cfc; }
+    .btn-edit-sm:hover  { background: #e4dff0; }
+    .btn-del-sm   { background: #fff0f0; color: #e53e3e; }
+    .btn-del-sm:hover   { background: #ffe4e4; }
+
+    /* MODAL */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(26,17,50,0.5);
+      z-index: 200; align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #fff; border-radius: 20px; padding: 32px; width: 480px; box-shadow: 0 20px 60px rgba(26,17,50,0.2); }
+    .modal h3 { font-size: 18px; font-weight: 700; color: #1a1132; margin-bottom: 20px; }
+    .modal input, .modal select {
+      width: 100%; padding: 12px 14px; border: 1.5px solid #e0daf0;
+      border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px;
+      color: #1a1132; background: #faf8ff; margin-bottom: 12px; outline: none;
+    }
+    .modal input:focus, .modal select:focus { border-color: #7c5cfc; }
+    .modal-btns { display: flex; gap: 10px; margin-top: 8px; }
+    .modal-btns button {
+      flex: 1; padding: 12px; border-radius: 10px; border: none;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer;
+    }
+    .btn-cancel { background: #f0ecf7; color: #1a1132; }
+    .btn-save { background: #7c5cfc; color: #fff; }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <a href="/profile" class="sidebar-avatar"><%= user.email[0].toUpperCase() %></a>
+    <a href="/dashboard" class="sidebar-item" title="Home">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </a>
+    <a href="/files" class="sidebar-item active" title="My Files">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+      My Files
+    </a>
+    <a href="#" class="sidebar-item" title="Shared">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      Shared
+    </a>
+    <div class="sidebar-spacer"></div>
+    <a href="/dashboard" class="sidebar-item" title="Refresh">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      Refresh
+    </a>
+    <a href="/logout" class="sidebar-item" title="Lock app">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Lock app
+    </a>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <h1>My Files</h1>
+      <form action="/files" method="GET" class="search-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a99cc5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" name="search" placeholder="Search files..." value="<%= typeof search !== 'undefined' ? search : '' %>">
+      </form>
+      <div class="view-toggle">
+        <button class="view-btn active" id="listBtn" onclick="setView('list')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </button>
+        <button class="view-btn" id="gridBtn" onclick="setView('grid')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </button>
+      </div>
+      <a href="/export" class="topbar-btn" style="background:#f0ecf7;color:#1a1132;">⬇️ Export ZIP</a>
+      <button class="topbar-btn btn-upload" onclick="document.getElementById('uploadModal').classList.add('open'); updateSubType('')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Upload
+      </button>
+    </div>
+
+    <div class="content">
+      <!-- FILTER TABS -->
+      <div class="filter-tabs">
+        <a href="/files" class="filter-tab <%= !category || category === 'All' ? 'active' : '' %>">All Files</a>
+        <a href="/files?category=PDFs" class="filter-tab <%= category === 'PDFs' ? 'active' : '' %>">📄 PDFs</a>
+        <a href="/files?category=Certificates" class="filter-tab <%= category === 'Certificates' ? 'active' : '' %>">🎓 Certificates</a>
+        <a href="/files?category=Personal ID" class="filter-tab <%= category === 'Personal ID' ? 'active' : '' %>">👤 Personal ID</a>
+        <a href="/files?category=Financial" class="filter-tab <%= category === 'Financial' ? 'active' : '' %>">💰 Financial</a>
+        <a href="/files?category=Photos" class="filter-tab <%= category === 'Photos' ? 'active' : '' %>">🖼️ Photos</a>
+        <a href="/files?category=Property" class="filter-tab <%= category === 'Property' ? 'active' : '' %>">🏠 Property</a>
+        <a href="/files?category=Vehicle" class="filter-tab <%= category === 'Vehicle' ? 'active' : '' %>">🚗 Vehicle</a>
+        <a href="/files?category=Travel" class="filter-tab <%= category === 'Travel' ? 'active' : '' %>">✈️ Travel</a>
+      </div>
+
+      <!-- LIST VIEW -->
+      <div id="listView">
+        <div class="section-label">
+          <%= assets.length %> File<%= assets.length !== 1 ? 's' : '' %>
+        </div>
+        <% if (assets.length === 0) { %>
+          <div class="files-table">
+            <div class="empty-state">
+              <div>📂</div>
+              <p>No files found. Upload your first document!</p>
+            </div>
+          </div>
+        <% } else { %>
+          <div class="files-table">
+            <div class="table-header">
+              <div class="col-icon"></div>
+              <div class="col-name">Name</div>
+              <div class="col-cat">Category</div>
+              <div class="col-date">Date Added</div>
+              <div class="col-actions"></div>
+            </div>
+            <% assets.forEach(asset => { %>
+              <div class="table-row">
+                <div class="col-icon">
+                  <div class="file-icon-sm">
+                    <% if (asset.category === 'PDFs') { %>📄
+                    <% } else if (asset.category === 'Certificates') { %>🎓
+                    <% } else if (asset.category === 'Personal ID') { %>👤
+                    <% } else if (asset.category === 'Financial') { %>💰
+                    <% } else if (asset.category === 'Photos') { %>🖼️
+                    <% } else { %>📁<% } %>
+                  </div>
+                </div>
+                <div class="col-name">
+                  <a href="/<%= asset.filePath %>" target="_blank" class="file-link"><%= asset.filename %></a>
+                  <div style="font-size:11px;color:#a99cc5;margin-top:2px;">
+                    <% if (asset.fileSize) { %><%= (asset.fileSize/1024 < 1024) ? (asset.fileSize/1024).toFixed(1)+' KB' : (asset.fileSize/1048576).toFixed(1)+' MB' %><% } %>
+                    <% if (asset.issuedBy) { %> &middot; <%= asset.issuedBy %><% } %>
+                    <% if (asset.expiryDate) { %> &middot; Exp. <%= new Date(asset.expiryDate).toLocaleDateString('en-US',{year:'numeric',month:'short'}) %><% } %>
+                    <% if (asset.description) { %> &middot; <%= asset.description %><% } %>
+                  </div>
+                </div>
+                <div class="col-cat">
+                  <span class="badge"><%= asset.category %></span>
+                  <% if (asset.subType) { %><span class="badge" style="margin-left:4px;background:#ede8ff;"><%= asset.subType %></span><% } %>
+                </div>
+                <div class="col-date"><%= new Date(asset.uploadDate).toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'}) %></div>
+                <div class="col-actions">
+                  <%
+                    const _fnow = new Date();
+                    const _fin30 = new Date(_fnow.getTime() + 30*24*60*60*1000);
+                  %>
+                  <% if (asset.expiryDate) { %>
+                    <% if (new Date(asset.expiryDate) <= _fnow) { %>
+                      <span class="status-badge" style="background:#fff0f0;color:#e53e3e;">Expired</span>
+                    <% } else if (new Date(asset.expiryDate) <= _fin30) { %>
+                      <span class="status-badge" style="background:#fff7ed;color:#c2410c;">Expiring</span>
+                    <% } else { %>
+                      <span class="status-badge" style="background:#f0fdf4;color:#16a34a;">Active</span>
+                    <% } %>
+                  <% } %>
+                  <button class="action-btn btn-edit-sm" title="Edit"
+                    data-id="<%= asset._id %>"
+                    data-filename="<%= encodeURIComponent(asset.filename) %>"
+                    data-category="<%= asset.category %>"
+                    data-subtype="<%= encodeURIComponent(asset.subType||'') %>"
+                    data-description="<%= encodeURIComponent(asset.description||'') %>"
+                    data-issuedby="<%= encodeURIComponent(asset.issuedBy||'') %>"
+                    data-expiry="<%= asset.expiryDate ? new Date(asset.expiryDate).toISOString().split('T')[0] : '' %>"
+                    onclick="openEditModalFromBtn(this)">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button class="action-btn" title="Share" style="background:#f0ecf7;color:#7c5cfc;"
+                    onclick="shareAsset('<%= asset._id %>')">🔗</button>
+                  <button class="action-btn" title="Version History" style="background:#f0ecf7;color:#7c5cfc;font-size:10px;font-weight:700;"
+                    data-versions="<%= encodeURIComponent(JSON.stringify(asset.versions||[])) %>"
+                    onclick="showVersions(this)">Ver</button>
+                  <form action="/asset/<%= asset._id %>/delete" method="POST" style="margin:0;" onsubmit="return confirm('Delete this file?')">
+                    <button type="submit" class="action-btn btn-del-sm" title="Delete">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+      </div>
+
+      <!-- GRID VIEW -->
+      <div id="gridView" style="display:none;">
+        <% if (assets.length === 0) { %>
+          <div class="empty-state"><div>📂</div><p>No files found.</p></div>
+        <% } else { %>
+          <div class="files-grid">
+            <% assets.forEach(asset => { %>
+              <a href="/<%= asset.filePath %>" target="_blank" class="file-card">
+                <div class="file-card-icon">
+                  <% if (asset.category === 'PDFs') { %>📄
+                  <% } else if (asset.category === 'Certificates') { %>🎓
+                  <% } else if (asset.category === 'Personal ID') { %>👤
+                  <% } else if (asset.category === 'Financial') { %>💰
+                  <% } else if (asset.category === 'Photos') { %>🖼️
+                  <% } else if (asset.category === 'Property') { %>🏠
+                  <% } else if (asset.category === 'Vehicle') { %>🚗
+                  <% } else if (asset.category === 'Travel') { %>✈️
+                  <% } else { %>📁<% } %>
+                </div>
+                <div class="file-card-name"><%= asset.filename %></div>
+                <div class="file-card-meta"><%= new Date(asset.uploadDate).toLocaleDateString() %></div>
+                <% if (asset.description) { %><div class="file-card-meta" style="margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><%= asset.description %></div><% } %>
+                <span class="file-card-badge"><%= asset.category %><% if (asset.subType) { %> &middot; <%= asset.subType %><% } %></span>
+                <%
+                  const _gnow = new Date();
+                  const _gin30 = new Date(_gnow.getTime() + 30*24*60*60*1000);
+                %>
+                <% if (asset.expiryDate) { %>
+                  <% if (new Date(asset.expiryDate) <= _gnow) { %>
+                    <span class="file-card-badge" style="background:#fff0f0;color:#e53e3e;display:block;margin-top:4px;">Expired</span>
+                  <% } else if (new Date(asset.expiryDate) <= _gin30) { %>
+                    <span class="file-card-badge" style="background:#fff7ed;color:#c2410c;display:block;margin-top:4px;">Expiring Soon</span>
+                  <% } else { %>
+                    <span class="file-card-badge" style="background:#f0fdf4;color:#16a34a;display:block;margin-top:4px;">Active</span>
+                  <% } %>
+                <% } %>
+              </a>
+            <% }) %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- VERSION MODAL -->
+  <div class="modal-overlay" id="versionModal" onclick="if(event.target===this)this.classList.remove('open')">
+    <div class="modal" style="width:520px;">
+      <h3>📋 Version History</h3>
+      <div id="versionList" style="margin-top:8px;max-height:300px;overflow-y:auto;"></div>
+      <div class="modal-btns" style="margin-top:16px;">
+        <button type="button" class="btn-cancel" onclick="document.getElementById('versionModal').classList.remove('open')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPLOAD MODAL -->
+  <div class="modal-overlay" id="uploadModal" onclick="if(event.target===this)this.classList.remove('open')">
+    <div class="modal">
+      <h3>📤 Upload New File</h3>
+      <form action="/upload" method="POST" enctype="multipart/form-data">
+        <input type="text" name="title" placeholder="File name..." required>
+
+        <select name="category" id="modalCategory" required onchange="updateSubType(this.value,'modal')">
+          <option value="">Select category...</option>
+          <option value="PDFs">PDFs</option>
+          <option value="Certificates">Certificates</option>
+          <option value="Personal ID">Personal ID</option>
+          <option value="Financial">Financial Docs</option>
+          <option value="Photos">Photos</option>
+          <option value="Property">Property</option>
+          <option value="Vehicle">Vehicle</option>
+          <option value="Travel">Travel</option>
+        </select>
+
+        <select name="subType" id="modalSubType" style="display:none;">
+          <option value="">Select type...</option>
+        </select>
+
+        <input type="text" name="issuedBy" id="modalIssuedBy" placeholder="Issued by (e.g. MIT, Government)..." style="display:none;">
+        <input type="date" name="expiryDate" id="modalExpiry" style="display:none;">
+
+        <textarea name="description" placeholder="Description (optional)..." rows="2"
+          style="width:100%;padding:12px 14px;border:1.5px solid #e0daf0;border-radius:10px;
+          font-family:'DM Sans',sans-serif;font-size:14px;color:#1a1132;background:#faf8ff;
+          margin-bottom:12px;outline:none;resize:vertical;"
+          onfocus="this.style.borderColor='#7c5cfc'" onblur="this.style.borderColor='#e0daf0'"></textarea>
+
+        <input type="file" name="file" required style="padding:10px;background:#fff;">
+        <div class="modal-btns">
+          <button type="button" class="btn-cancel" onclick="document.getElementById('uploadModal').classList.remove('open')">Cancel</button>
+          <button type="submit" class="btn-save">Upload File</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- EDIT MODAL -->
+  <div class="modal-overlay" id="editModal" onclick="if(event.target===this)this.classList.remove('open')">
+    <div class="modal">
+      <h3>✏️ Edit File Details</h3>
+      <form id="editForm" method="POST">
+        <input type="text" name="title" id="editTitle" placeholder="File name..." required>
+
+        <select name="category" id="editCategory" required onchange="updateSubType(this.value,'edit')">
+          <option value="">Select category...</option>
+          <option value="PDFs">PDFs</option>
+          <option value="Certificates">Certificates</option>
+          <option value="Personal ID">Personal ID</option>
+          <option value="Financial">Financial Docs</option>
+          <option value="Photos">Photos</option>
+          <option value="Property">Property</option>
+          <option value="Vehicle">Vehicle</option>
+          <option value="Travel">Travel</option>
+        </select>
+
+        <select name="subType" id="editSubType" style="display:none;">
+          <option value="">Select type...</option>
+        </select>
+
+        <input type="text" name="issuedBy" id="editIssuedBy" placeholder="Issued by..." style="display:none;">
+        <input type="date" name="expiryDate" id="editExpiry" style="display:none;">
+
+        <textarea name="description" id="editDescription" placeholder="Description (optional)..." rows="2"
+          style="width:100%;padding:12px 14px;border:1.5px solid #e0daf0;border-radius:10px;
+          font-family:'DM Sans',sans-serif;font-size:14px;color:#1a1132;background:#faf8ff;
+          margin-bottom:12px;outline:none;resize:vertical;"
+          onfocus="this.style.borderColor='#7c5cfc'" onblur="this.style.borderColor='#e0daf0'"></textarea>
+
+        <div class="modal-btns">
+          <button type="button" class="btn-cancel" onclick="document.getElementById('editModal').classList.remove('open')">Cancel</button>
+          <button type="submit" class="btn-save">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const subTypeOptions = {
+      'PDFs':        ['General Document', 'Contract', 'Report', 'Invoice', 'Receipt', 'Manual', 'Other'],
+      'Certificates':['Undergraduate', 'Masters', 'PhD', 'Professional Certificate', 'Award', 'Other'],
+      'Personal ID': ['Passport', "Driver's License", 'National ID', 'Birth Certificate', 'Visa', 'Other'],
+      'Financial':   ['Bank Statement', 'Tax Document', 'Invoice', 'Receipt', 'Insurance', 'Loan Document', 'Other'],
+      'Photos':      ['Personal Photo', 'Professional Photo', 'Event Photo', 'Travel Photo', 'Family Photo', 'Other'],
+      'Property':    ['Deed', 'Lease Agreement', 'Utility Bill', 'Mortgage', 'Sale Agreement', 'Other'],
+      'Vehicle':     ['Registration', 'Insurance', 'Service Record', 'Purchase Receipt', 'License Plate', 'Other'],
+      'Travel':      ['Visa', 'Itinerary', 'Booking Confirmation', 'Travel Insurance', 'Hotel Booking', 'Other']
+    };
+
+    function updateSubType(category, prefix) {
+      const sel    = document.getElementById(prefix === 'edit' ? 'editSubType'  : 'modalSubType');
+      const issued = document.getElementById(prefix === 'edit' ? 'editIssuedBy' : 'modalIssuedBy');
+      const expiry = document.getElementById(prefix === 'edit' ? 'editExpiry'   : 'modalExpiry');
+      const opts   = subTypeOptions[category];
+      if (opts) {
+        sel.innerHTML = '<option value="">Select type...</option>' +
+          opts.map(o => `<option value="${o}">${o}</option>`).join('');
+        sel.style.display = 'block';
+        sel.required = true;
+      } else {
+        sel.style.display = 'none';
+        sel.required = false;
+        sel.value = '';
+      }
+      issued.style.display = category ? 'block' : 'none';
+      expiry.style.display = category ? 'block' : 'none';
+    }
+
+    function openEditModalFromBtn(btn) {
+      openEditModal({
+        id:          btn.dataset.id,
+        filename:    decodeURIComponent(btn.dataset.filename),
+        category:    btn.dataset.category,
+        subType:     decodeURIComponent(btn.dataset.subtype),
+        description: decodeURIComponent(btn.dataset.description),
+        issuedBy:    decodeURIComponent(btn.dataset.issuedby),
+        expiryDate:  btn.dataset.expiry
+      });
+    }
+
+    function openEditModal(asset) {
+      document.getElementById('editForm').action = '/asset/' + asset.id + '/edit';
+      document.getElementById('editTitle').value       = asset.filename;
+      document.getElementById('editDescription').value = asset.description;
+      document.getElementById('editIssuedBy').value    = asset.issuedBy;
+      document.getElementById('editExpiry').value      = asset.expiryDate;
+      document.getElementById('editCategory').value    = asset.category;
+      updateSubType(asset.category, 'edit');
+      setTimeout(() => { document.getElementById('editSubType').value = asset.subType; }, 0);
+      document.getElementById('editModal').classList.add('open');
+    }
+
+    async function shareAsset(id) {
+      try {
+        const res = await fetch('/asset/' + id + '/share', { method: 'POST' });
+        const data = await res.json();
+        const url = window.location.origin + '/share/' + data.token;
+        await navigator.clipboard.writeText(url);
+        alert('Share link copied to clipboard!');
+      } catch (e) {
+        alert('Failed to generate share link.');
+      }
+    }
+
+    function showVersions(btn) {
+      const versions = JSON.parse(decodeURIComponent(btn.dataset.versions));
+      const list = document.getElementById('versionList');
+      if (!versions || versions.length === 0) {
+        list.innerHTML = '<p style="color:#a99cc5;font-size:14px;padding:12px 0;">No previous versions. This is the original file.</p>';
+      } else {
+        list.innerHTML = versions.map((v, i) => {
+          const sz = v.fileSize < 1048576 ? (v.fileSize/1024).toFixed(1)+' KB' : (v.fileSize/1048576).toFixed(1)+' MB';
+          const dt = new Date(v.uploadDate).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+          return `<div style="padding:12px 0;border-bottom:1px solid #f0ecf7;">
+            <div style="font-size:13px;font-weight:600;color:#1a1132;">Version ${versions.length - i}</div>
+            <div style="font-size:12px;color:#a99cc5;margin-top:2px;">${dt} &middot; ${sz}</div>
+            <a href="/${v.filePath}" target="_blank" style="font-size:12px;color:#7c5cfc;text-decoration:none;font-weight:600;">Download</a>
+          </div>`;
+        }).join('');
+      }
+      document.getElementById('versionModal').classList.add('open');
+    }
+  </script>
+
+  <script>
+    function setView(v) {
+      document.getElementById('listView').style.display = v === 'list' ? 'block' : 'none';
+      document.getElementById('gridView').style.display = v === 'grid' ? 'block' : 'none';
+      document.getElementById('listBtn').classList.toggle('active', v === 'list');
+      document.getElementById('gridBtn').classList.toggle('active', v === 'grid');
+    }
+  </script>
+</body>
+</html>

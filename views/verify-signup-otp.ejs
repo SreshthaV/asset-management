@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Verify OTP - Asset Management</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .otp-wrapper {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    .otp-wrapper input {
+      width: 48px;
+      height: 56px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+      border: 2px solid #e0daf0;
+      border-radius: 10px;
+      background: #faf8ff;
+      transition: all 0.2s;
+      font-family: 'DM Sans', sans-serif;
+      color: #1a1132;
+    }
+    .otp-wrapper input:focus {
+      border-color: #7c5cfc;
+      background: #fff;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(124,92,252,0.15);
+    }
+    .timer {
+      font-size: 0.85rem;
+      color: #a99cc5;
+      margin-top: 8px;
+      text-align: center;
+    }
+    .timer span { color: #7c5cfc; font-weight: 700; }
+    .email-badge {
+      display: inline-block;
+      background: #f0ecf7;
+      color: #7c5cfc;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body class="login-page">
+  <div class="login-wrapper">
+    <h1 class="main-title">Digital Asset Locker</h1>
+    <div class="login-container">
+      <div style="font-size:48px;margin-bottom:12px;">📧</div>
+      <h2>Check Your Email</h2>
+      <p class="subtitle">We sent a 6-digit OTP to</p>
+      <div class="email-badge"><%= email %></div>
+
+      <% if (error && error.startsWith('✅')) { %>
+        <div class="success-msg"><%= error %></div>
+      <% } else if (error) { %>
+        <div class="error-msg"><%= error %></div>
+      <% } %>
+
+      <form action="/verify-signup-otp" method="POST" id="otpForm">
+        <input type="hidden" name="otp" id="otpHidden">
+        <div class="otp-wrapper">
+          <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]">
+          <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]">
+          <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]">
+          <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]">
+          <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]">
+          <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]">
+        </div>
+        <p class="timer">OTP expires in <span id="countdown">10:00</span></p>
+        <button type="submit" class="login-btn">Verify & Create Account</button>
+      </form>
+
+      <div class="divider">didn't receive it?</div>
+      <form action="/resend-signup-otp" method="POST">
+        <button type="submit" class="resend-btn">Resend OTP</button>
+      </form>
+      <p class="auth-link" style="margin-top:16px;"><a href="/signup">← Back</a></p>
+    </div>
+  </div>
+
+  <script>
+    // Auto-focus next input
+    const digits = document.querySelectorAll('.otp-digit');
+    digits.forEach((input, i) => {
+      input.addEventListener('input', () => {
+        input.value = input.value.replace(/[^0-9]/g, '');
+        if (input.value && i < digits.length - 1) digits[i + 1].focus();
+        updateHidden();
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !input.value && i > 0) digits[i - 1].focus();
+      });
+      input.addEventListener('paste', (e) => {
+        const paste = e.clipboardData.getData('text').replace(/[^0-9]/g, '');
+        digits.forEach((d, j) => { d.value = paste[j] || ''; });
+        updateHidden();
+        e.preventDefault();
+      });
+    });
+
+    function updateHidden() {
+      document.getElementById('otpHidden').value = [...digits].map(d => d.value).join('');
+    }
+
+    // Submit when all 6 filled
+    digits.forEach(input => {
+      input.addEventListener('input', () => {
+        const full = [...digits].every(d => d.value);
+        if (full) document.getElementById('otpForm').submit();
+      });
+    });
+
+    // Countdown timer
+    let seconds = 600;
+    const countdown = document.getElementById('countdown');
+    const timer = setInterval(() => {
+      seconds--;
+      const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+      const s = (seconds % 60).toString().padStart(2, '0');
+      countdown.textContent = `${m}:${s}`;
+      if (seconds <= 0) {
+        clearInterval(timer);
+        countdown.textContent = 'Expired';
+        countdown.style.color = '#718096';
+      }
+    }, 1000);
+  </script>
+</body>
+</html>

@@ -1,63 +1,738 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dashboard - Asset Management</title>
-    <link rel="stylesheet" href="/style.css">
+  <title>Dashboard - Digital Asset Locker</title>
+  <link rel="stylesheet" href="/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: #faf8ff; overflow-x: hidden; }
+
+    /* ── SIDEBAR ─────────────────────────────────── */
+    .sidebar {
+      width: 72px; min-height: 100vh; background: #1a1132;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 16px 0; gap: 4px; position: fixed; left: 0; top: 0; z-index: 100;
+    }
+    .sidebar-avatar {
+      width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer;
+      background: #7c5cfc; color: #fff; font-size: 16px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px; font-family: 'DM Sans', sans-serif;
+      text-decoration: none;
+    }
+    .sidebar-item {
+      width: 48px; height: 48px; border-radius: 12px; border: none; cursor: pointer;
+      background: transparent; color: #a99cc5;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 3px; transition: all 0.2s;
+      text-decoration: none; font-size: 9px; font-family: 'DM Sans', sans-serif;
+    }
+    .sidebar-item:hover, .sidebar-item.active {
+      background: #2d2250; color: #fff;
+    }
+    .sidebar-item svg { stroke: currentColor; }
+    .sidebar-spacer { flex: 1; }
+
+    /* ── MAIN LAYOUT ─────────────────────────────── */
+    .main { margin-left: 72px; min-height: 100vh; display: flex; }
+
+    /* ── TOP NAV ─────────────────────────────────── */
+    .topnav {
+      position: fixed; top: 0; left: 72px; right: 0; height: 60px;
+      background: #fff; border-bottom: 1px solid #f0ecf7;
+      display: flex; align-items: center; padding: 0 32px;
+      gap: 16px; z-index: 50;
+    }
+    .topnav h1 {
+      font-family: 'Playfair Display', serif; font-size: 20px;
+      color: #1a1132; flex: 1;
+    }
+    .search-box {
+      display: flex; align-items: center; gap: 8px;
+      background: #f5f3ff; border-radius: 10px; padding: 8px 14px;
+      border: 1px solid #ede8ff;
+    }
+    .search-box input {
+      border: none; background: transparent; outline: none;
+      font-family: 'DM Sans', sans-serif; font-size: 13px;
+      color: #1a1132; width: 200px;
+    }
+    .search-box input::placeholder { color: #a99cc5; }
+    .nav-btn {
+      padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+      background: #f0ecf7; color: #1a1132; text-decoration: none;
+      transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+    }
+    .nav-btn:hover { background: #e4dff0; }
+    .nav-btn.primary { background: #7c5cfc; color: #fff; }
+    .nav-btn.primary:hover { background: #6b4ef0; }
+    .nav-btn.danger { background: #fff0f0; color: #e53e3e; }
+    .nav-btn.danger:hover { background: #ffe4e4; }
+
+    /* ── CONTENT ─────────────────────────────────── */
+    .content { margin-top: 60px; flex: 1; padding: 32px; }
+
+    /* ── WELCOME BANNER ──────────────────────────── */
+    .welcome-banner {
+      background: linear-gradient(135deg, #1a1132 0%, #4a2d8f 100%);
+      border-radius: 20px; padding: 32px; margin-bottom: 32px;
+      display: flex; justify-content: space-between; align-items: center;
+      color: #fff; overflow: hidden; position: relative;
+    }
+    .welcome-banner::after {
+      content: '🔒'; position: absolute; right: 40px; top: 50%;
+      transform: translateY(-50%); font-size: 80px; opacity: 0.1;
+    }
+    .welcome-banner h2 {
+      font-family: 'Playfair Display', serif; font-size: 26px; margin-bottom: 6px;
+    }
+    .welcome-banner p { color: #c4b5fd; font-size: 14px; margin-bottom: 20px; }
+    .upload-trigger {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #7c5cfc; color: #fff; padding: 10px 20px;
+      border-radius: 10px; font-weight: 600; font-size: 14px;
+      cursor: pointer; border: none; font-family: 'DM Sans', sans-serif;
+      transition: background 0.2s;
+    }
+    .upload-trigger:hover { background: #6b4ef0; }
+
+    /* ── UPLOAD MODAL ────────────────────────────── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(26,17,50,0.5); z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #fff; border-radius: 20px; padding: 32px;
+      width: 480px; box-shadow: 0 20px 60px rgba(26,17,50,0.2);
+    }
+    .modal h3 {
+      font-family: 'Playfair Display', serif; font-size: 20px;
+      color: #1a1132; margin-bottom: 20px;
+    }
+    .modal input, .modal select {
+      width: 100%; padding: 12px 14px; border: 1.5px solid #e0daf0;
+      border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px;
+      color: #1a1132; background: #faf8ff; margin-bottom: 12px; outline: none;
+    }
+    .modal input:focus, .modal select:focus { border-color: #7c5cfc; }
+    .modal-btns { display: flex; gap: 10px; margin-top: 8px; }
+    .modal-btns button {
+      flex: 1; padding: 12px; border-radius: 10px; border: none;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-cancel { background: #f0ecf7; color: #1a1132; }
+    .btn-cancel:hover { background: #e4dff0; }
+    .btn-upload { background: #7c5cfc; color: #fff; }
+    .btn-upload:hover { background: #6b4ef0; }
+
+    /* ── CATEGORIES ──────────────────────────────── */
+    .section-title {
+      font-family: 'Playfair Display', serif; font-size: 18px;
+      color: #1a1132; margin-bottom: 16px; display: flex;
+      justify-content: space-between; align-items: center;
+    }
+    .section-title span { font-family: 'DM Sans', sans-serif; font-size: 13px; color: #a99cc5; font-weight: 400; }
+    .categories-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 32px;
+    }
+    .category-card {
+      background: #fff; border-radius: 14px; padding: 20px 16px;
+      cursor: pointer; transition: all 0.2s; border: 1.5px solid transparent;
+      box-shadow: 0 2px 8px rgba(26,17,50,0.04);
+      text-decoration: none; display: block;
+    }
+    .category-card:hover { border-color: #c4b5fd; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(124,92,252,0.1); }
+    .category-icon { font-size: 28px; margin-bottom: 10px; }
+    .category-name { font-size: 13px; font-weight: 600; color: #1a1132; margin-bottom: 4px; }
+    .category-count { font-size: 11px; color: #a99cc5; }
+
+    /* ── FILE ACTION BTNS ────────────────────────── */
+    .file-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .action-btn {
+      width: 30px; height: 30px; border-radius: 8px; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+    }
+    .btn-edit-sm  { background: #f0ecf7; color: #7c5cfc; }
+    .btn-edit-sm:hover  { background: #e4dff0; }
+    .btn-del-sm   { background: #fff0f0; color: #e53e3e; }
+    .btn-del-sm:hover   { background: #ffe4e4; }
+
+    /* ── FILES LIST ──────────────────────────────── */
+    .files-section {
+      background: #fff; border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(26,17,50,0.05); overflow: hidden;
+    }
+    .files-header {
+      padding: 20px 24px; border-bottom: 1px solid #f0ecf7;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .files-header h3 { font-family: 'Playfair Display', serif; font-size: 16px; color: #1a1132; }
+    .file-count {
+      background: #f0ecf7; color: #7c5cfc; font-size: 12px;
+      font-weight: 700; padding: 4px 10px; border-radius: 20px;
+    }
+    .file-row {
+      display: flex; align-items: center; padding: 16px 24px;
+      border-bottom: 1px solid #f9f7ff; transition: background 0.15s;
+      gap: 14px;
+    }
+    .file-row:last-child { border-bottom: none; }
+    .file-row:hover { background: #faf8ff; }
+    .file-icon-box {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: #f0ecf7; display: flex; align-items: center;
+      justify-content: center; font-size: 18px; flex-shrink: 0;
+    }
+    .file-info { flex: 1; min-width: 0; }
+    .file-name {
+      font-size: 14px; font-weight: 600; color: #1a1132;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      text-decoration: none; display: block;
+    }
+    .file-name:hover { color: #7c5cfc; }
+    .file-meta { font-size: 12px; color: #a99cc5; margin-top: 2px; }
+    .file-badge {
+      font-size: 11px; font-weight: 600; padding: 4px 10px;
+      border-radius: 20px; background: #f0ecf7; color: #7c5cfc; flex-shrink: 0;
+    }
+    .empty-state {
+      text-align: center; padding: 60px 20px; color: #a99cc5;
+    }
+    .empty-state div { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+
+    /* ── STORAGE ─────────────────────────────────── */
+    .storage-header {
+      display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer; padding: 18px 24px; border-radius: 16px;
+      background: #fff; box-shadow: 0 2px 12px rgba(26,17,50,0.05);
+      margin-bottom: 2px; transition: background 0.15s;
+    }
+    .storage-header:hover { background: #faf8ff; }
+    .storage-header-left { display: flex; flex-direction: column; gap: 4px; }
+    .storage-header-title { font-size: 15px; font-weight: 700; color: #1a1132; display: flex; align-items: center; gap: 6px; }
+    .storage-header-sub { font-size: 12px; color: #a99cc5; }
+    .storage-bar-wrap { width: 160px; }
+    .storage-bar-track { height: 6px; background: #f0ecf7; border-radius: 3px; overflow: hidden; margin-bottom: 4px; }
+    .storage-bar-fill { height: 100%; background: #7c5cfc; border-radius: 3px; }
+    .storage-body {
+      display: none; background: #fff; border-radius: 0 0 16px 16px;
+      box-shadow: 0 4px 12px rgba(26,17,50,0.06); margin-bottom: 28px; overflow: hidden;
+    }
+    .storage-body.open { display: block; }
+    .storage-cat-row {
+      padding: 14px 24px; border-bottom: 1px solid #f5f3ff;
+      cursor: pointer; transition: background 0.1s;
+    }
+    .storage-cat-row:hover { background: #faf8ff; }
+    .storage-cat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .storage-cat-name { font-size: 13px; font-weight: 600; color: #1a1132; }
+    .storage-cat-size { font-size: 12px; font-weight: 600; color: #7c5cfc; }
+    .storage-cat-bar { height: 5px; background: #f0ecf7; border-radius: 3px; overflow: hidden; }
+    .storage-cat-fill { height: 100%; background: #7c5cfc; border-radius: 3px; }
+    .storage-file-list { display: none; margin-top: 10px; }
+    .storage-file-list.open { display: block; }
+    .storage-file-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0; border-top: 1px solid #f5f3ff;
+    }
+    .storage-file-icon { font-size: 15px; flex-shrink: 0; }
+    .storage-file-name { flex: 1; font-size: 12px; color: #1a1132; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .storage-file-kb { font-size: 11px; color: #7c5cfc; font-weight: 600; flex-shrink: 0; }
+    .storage-del-btn {
+      width: 24px; height: 24px; border-radius: 6px; border: none; cursor: pointer;
+      background: #fff0f0; color: #e53e3e; display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0; transition: background 0.2s;
+    }
+    .storage-del-btn:hover { background: #ffe4e4; }
+    .storage-total { padding: 12px 24px; font-size: 12px; color: #a99cc5; border-top: 1px solid #f0ecf7; }
+
+    @media (max-width: 900px) {
+      .categories-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
 </head>
 <body>
-    <header class="dashboard-header">
-        <h1>Digital Asset Locker</h1>
-        
-        <form action="/dashboard" method="GET" class="header-tools">
-            <input type="text" name="search" placeholder="Search your assets..." class="search-input">
-            
-            <select name="category" class="category-select" onchange="this.form.submit()">
-                <option value="All">All Categories</option>
-                <option value="PDFs">PDFs</option>
-                <option value="Certificates">Certificates</option>
-                <option value="Personal ID">Personal ID</option>
-                <option value="Financial">Financial Docs</option>
-                <option value="Photos">Photos/Images</option>
-                <option value="Classifications">Classifications</option>
-            </select>
-            <button type="submit" class="search-btn">Search</button>
-        </form>
-    </header>
 
-    <div class="container">
-        <section class="upload-section">
-            <form action="/upload" method="POST" enctype="multipart/form-data" class="upload-inline">
-                <input type="text" name="title" placeholder="Document Name" required>
-                <select name="category" required>
-                    <option value="PDFs">PDFs</option>
-                    <option value="Certificates">Certificates</option>
-                    <option value="Personal ID">Personal ID</option>
-                    <option value="Financial">Financial Docs</option>
-                    <option value="Photos">Photos/Images</option>
-                    <option value="Classifications">Classifications</option>
-                </select>
-                <input type="file" name="file" required>
-                <button type="submit">Save</button>
-            </form>
-        </section>
+  <!-- SIDEBAR -->
+  
+    <div class="sidebar">
+  <a href="/profile" class="sidebar-avatar" style="text-decoration: none;">
+    <%= user.email[0].toUpperCase() %>
+  </a>
 
-        <hr>
+  <a href="/dashboard" class="sidebar-item <%= currentPage === 'dashboard' ? 'active' : '' %>" title="Home">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Home
+  </a>
 
-        <main class="asset-list">
-            <h3>My Documents</h3>
-            <div class="list-container">
-                <% assets.forEach(asset => { %>
-                    <div class="asset-item">
-                        <a href="/<%= asset.filePath %>" target="_blank" class="file-link">
-                            <%= asset.filename %>
-                        </a>
-                    </div>
-                <% }) %>
-                <% if(assets.length === 0) { %>
-                    <p>No documents found.</p>
-                <% } %>
-            </div>
-        </main>
+  <a href="/files" class="sidebar-item <%= currentPage === 'files' ? 'active' : '' %>" title="My Files">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+    Files
+  </a>
+
+  <div class="sidebar-spacer"></div>
+  
+  <a href="/logout" class="sidebar-item" title="Logout">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Logout
+  </a>
+</div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- TOP NAV -->
+    <div class="topnav">
+      <h1>Digital Asset Locker</h1>
+      <form action="/dashboard" method="GET" class="search-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a99cc5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" name="search" placeholder="Search files..." value="<%= typeof search !== 'undefined' ? search : '' %>">
+      </form>
+      <select onchange="window.location='/dashboard?category='+this.value" class="nav-btn" style="cursor:pointer;">
+        <option value="All">All Categories</option>
+        <option value="PDFs">PDFs</option>
+        <option value="Certificates">Certificates</option>
+        <option value="Personal ID">Personal ID</option>
+        <option value="Financial">Financial Docs</option>
+        <option value="Photos">Photos</option>
+        <option value="Property">Property</option>
+        <option value="Vehicle">Vehicle</option>
+        <option value="Travel">Travel</option>
+      </select>
+      <a href="/export" class="nav-btn">⬇️ Export ZIP</a>
+      <button class="nav-btn primary" onclick="openUploadModal('')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Upload
+      </button>
+      <span style="font-size:13px;color:#a99cc5;"><%= user.email %></span>
     </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- WELCOME BANNER -->
+      <div class="welcome-banner">
+        <div>
+          <h2>Welcome back, <%= user.email.split('@')[0] %> 👋</h2>
+          <p>Your files are encrypted and secure. <%= assets.length %> document<%= assets.length !== 1 ? 's' : '' %> stored &middot; <%= totalStorage < 1048576 ? (totalStorage/1024).toFixed(1)+' KB' : (totalStorage/1048576).toFixed(1)+' MB' %> used.</p>
+          <button class="upload-trigger" onclick="openUploadModal('')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload New File
+          </button>
+        </div>
+      </div>
+
+      <!-- EXPIRY ALERT BANNER -->
+      <% if (expiringAssets.length > 0 || expiredAssets.length > 0) { %>
+        <div style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:14px;padding:16px 20px;margin-bottom:24px;">
+          <div style="font-weight:700;color:#c2410c;margin-bottom:8px;">⚠️ Attention Required</div>
+          <% expiredAssets.forEach(a => { %>
+            <div style="font-size:13px;color:#9a3412;padding:4px 0;">🔴 <strong><%= a.filename %></strong> — Expired on <%= new Date(a.expiryDate).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) %></div>
+          <% }) %>
+          <% expiringAssets.forEach(a => { %>
+            <div style="font-size:13px;color:#92400e;padding:4px 0;">🟡 <strong><%= a.filename %></strong> — Expires <%= new Date(a.expiryDate).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) %></div>
+          <% }) %>
+        </div>
+      <% } %>
+
+      <!-- CATEGORIES -->
+      <div class="section-title">
+        Browse by Category
+        <span><%= assets.length %> total files</span>
+      </div>
+      <div class="categories-grid">
+        <div class="category-card" onclick="openUploadModal('PDFs')">
+          <div class="category-name">PDFs</div>
+          <div class="category-count"><%= assets.filter(a => a.category === 'PDFs').length %> files</div>
+        </div>
+        <div class="category-card" onclick="openUploadModal('Certificates')">
+          <div class="category-name">Certificates</div>
+          <div class="category-count"><%= assets.filter(a => a.category === 'Certificates').length %> files</div>
+        </div>
+        <div class="category-card" onclick="openUploadModal('Personal ID')">
+          <div class="category-name">Personal ID</div>
+          <div class="category-count"><%= assets.filter(a => a.category === 'Personal ID').length %> files</div>
+        </div>
+        <div class="category-card" onclick="openUploadModal('Financial')">
+          <div class="category-name">Financial Docs</div>
+          <div class="category-count"><%= assets.filter(a => a.category === 'Financial').length %> files</div>
+        </div>
+        <div class="category-card" onclick="openUploadModal('Photos')">
+          <div class="category-name">Photos</div>
+          <div class="category-count"><%= assets.filter(a => a.category === 'Photos').length %> files</div>
+        </div>
+        <div class="category-card" onclick="openUploadModal('Property')">
+          <div class="category-name">Property</div>
+          <div class="category-count"><%= assets.filter(a => a.category === 'Property').length %> files</div>
+        </div>
+        <div class="category-card" onclick="openUploadModal('Vehicle')">
+          <div class="category-name">Vehicle</div>
+          <div class="category-count"><%= assets.filter(a => a.category === 'Vehicle').length %> files</div>
+        </div>
+        <div class="category-card" onclick="openUploadModal('Travel')">
+          <div class="category-name">Travel</div>
+          <div class="category-count"><%= assets.filter(a => a.category === 'Travel').length %> files</div>
+        </div>
+        <div class="category-card" onclick="openUploadModal('')" style="border: 1.5px dashed #c4b5fd; background: #faf8ff;">
+          <div class="category-name">Upload New</div>
+          <div class="category-count">Add a file</div>
+        </div>
+      </div>
+
+      <!-- STORAGE BY CATEGORY -->
+      <% const catKeys = Object.keys(storageByCategory); %>
+      <% if (catKeys.length > 0) { %>
+        <%
+          const totalLabel = totalStorage < 1048576
+            ? (totalStorage/1024).toFixed(1)+' KB'
+            : (totalStorage/1048576).toFixed(1)+' MB';
+          const totalPct = Math.min(Math.round((totalStorage/(3*1024*1024*1024))*100),100);
+        %>
+        <div class="storage-header" onclick="toggleStorageBody()">
+          <div class="storage-header-left">
+            <div class="storage-header-title">
+              Storage Usage
+              <span id="dashStorageChevron" style="color:#a99cc5;font-size:12px;transition:transform 0.2s;">▾</span>
+            </div>
+            <div class="storage-header-sub"><%= totalLabel %> used &middot; <%= assets.length %> file<%= assets.length!==1?'s':'' %></div>
+          </div>
+          <div class="storage-bar-wrap">
+            <div class="storage-bar-track">
+              <div class="storage-bar-fill" data-width="<%= totalPct %>"></div>
+            </div>
+            <div style="font-size:11px;color:#a99cc5;text-align:right;"><%= totalPct %>% of 3 GB</div>
+          </div>
+        </div>
+
+        <div class="storage-body" id="dashStorageBody">
+          <% catKeys.forEach((cat, ci) => { %>
+            <%
+              const bytes = storageByCategory[cat];
+              const catPct = totalStorage > 0 ? Math.round(bytes/totalStorage*100) : 0;
+              const catLabel = bytes < 1048576 ? (bytes/1024).toFixed(1)+' KB' : (bytes/1048576).toFixed(1)+' MB';
+              const catFiles = assets.filter(a => a.category === cat);
+            %>
+            <div class="storage-cat-row" data-ci="<%= ci %>" onclick="toggleCatFiles(this.dataset.ci)">
+              <div class="storage-cat-header">
+                <span class="storage-cat-name"><%= cat %> (<%= catFiles.length %> file<%= catFiles.length!==1?'s':'' %>)</span>
+                <span class="storage-cat-size"><%= catLabel %> (<%= catPct %>%)</span>
+              </div>
+              <div class="storage-cat-bar">
+                <div class="storage-cat-fill" data-width="<%= catPct %>"></div>
+              </div>
+              <div class="storage-file-list" id="catFiles<%= ci %>">
+                <% catFiles.forEach(file => { %>
+                  <%
+                    const fSize = file.fileSize || 0;
+                    const fLabel = fSize < 1048576 ? (fSize/1024).toFixed(1)+' KB' : (fSize/1048576).toFixed(1)+' MB';
+                    const fIcon = file.category==='PDFs'?'📄':file.category==='Certificates'?'🎓':file.category==='Personal ID'?'👤':file.category==='Financial'?'💰':file.category==='Photos'?'🖼️':file.category==='Property'?'🏠':file.category==='Vehicle'?'🚗':file.category==='Travel'?'✈️':'📁';
+                  %>
+                  <div class="storage-file-item">
+                    <span class="storage-file-icon"><%= fIcon %></span>
+                    <span class="storage-file-name"><%= file.filename %></span>
+                    <span class="storage-file-kb"><%= fLabel %></span>
+                    <form action="/asset/<%= file._id %>/delete" method="POST" style="margin:0;" onsubmit="return confirm('Delete <%= file.filename %>?')">
+                      <button type="submit" class="storage-del-btn" title="Delete">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                      </button>
+                    </form>
+                  </div>
+                <% }) %>
+              </div>
+            </div>
+          <% }) %>
+          <div class="storage-total">Total: <%= totalLabel %> / 3.0 GB</div>
+        </div>
+      <% } %>
+
+      <!-- FILES LIST -->
+      <div class="section-title">Recent Files</div>
+      <div class="files-section">
+        <div class="files-header">
+          <h3>My Documents</h3>
+          <span class="file-count"><%= assets.length %> file<%= assets.length !== 1 ? 's' : '' %></span>
+        </div>
+        <% if (assets.length === 0) { %>
+          <div class="empty-state">
+            <div>📂</div>
+            <p>No documents yet. Upload your first file!</p>
+          </div>
+        <% } else { %>
+          <% assets.forEach(asset => { %>
+            <div class="file-row">
+              <div class="file-icon-box">
+                <% if (asset.category === 'PDFs') { %>📄
+                <% } else if (asset.category === 'Certificates') { %>🎓
+                <% } else if (asset.category === 'Personal ID') { %>👤
+                <% } else if (asset.category === 'Financial') { %>💰
+                <% } else if (asset.category === 'Photos') { %>🖼️
+                <% } else if (asset.category === 'Property') { %>🏠
+                <% } else if (asset.category === 'Vehicle') { %>🚗
+                <% } else if (asset.category === 'Travel') { %>✈️
+                <% } else { %>📁<% } %>
+              </div>
+              <div class="file-info">
+                <a href="/<%= asset.filePath %>" target="_blank" class="file-name"><%= asset.filename %></a>
+                <div class="file-meta">
+                  <%= new Date(asset.uploadDate).toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'}) %>
+                  <% if (asset.fileSize) { %> &middot; <%= (asset.fileSize/1024 < 1024) ? (asset.fileSize/1024).toFixed(1)+' KB' : (asset.fileSize/1048576).toFixed(1)+' MB' %><% } %>
+                  <% if (asset.issuedBy) { %> &middot; <%= asset.issuedBy %><% } %>
+                  <% if (asset.expiryDate) { %> &middot; Expires <%= new Date(asset.expiryDate).toLocaleDateString('en-US',{year:'numeric',month:'short'}) %><% } %>
+                  <% if (asset.description) { %> &middot; <%= asset.description %><% } %>
+                </div>
+              </div>
+              <span class="file-badge"><%= asset.category %><% if (asset.subType) { %> &middot; <%= asset.subType %><% } %></span>
+              <%
+                const _now = new Date();
+                const _in30 = new Date(_now.getTime() + 30*24*60*60*1000);
+              %>
+              <% if (asset.expiryDate) { %>
+                <% if (new Date(asset.expiryDate) <= _now) { %>
+                  <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;background:#fff0f0;color:#e53e3e;flex-shrink:0;">Expired</span>
+                <% } else if (new Date(asset.expiryDate) <= _in30) { %>
+                  <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;background:#fff7ed;color:#c2410c;flex-shrink:0;">Expiring Soon</span>
+                <% } else { %>
+                  <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;background:#f0fdf4;color:#16a34a;flex-shrink:0;">Active</span>
+                <% } %>
+              <% } %>
+              <div class="file-actions">
+                <button class="action-btn btn-edit-sm" title="Edit"
+                  data-id="<%= asset._id %>"
+                  data-filename="<%= encodeURIComponent(asset.filename) %>"
+                  data-category="<%= asset.category %>"
+                  data-subtype="<%= encodeURIComponent(asset.subType||'') %>"
+                  data-description="<%= encodeURIComponent(asset.description||'') %>"
+                  data-issuedby="<%= encodeURIComponent(asset.issuedBy||'') %>"
+                  data-expiry="<%= asset.expiryDate ? new Date(asset.expiryDate).toISOString().split('T')[0] : '' %>"
+                  onclick="openEditModalFromBtn(this)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button class="action-btn" title="Share" style="background:#f0ecf7;color:#7c5cfc;"
+                  onclick="shareAsset('<%= asset._id %>')">🔗</button>
+                <button class="action-btn" title="Version History" style="background:#f0ecf7;color:#7c5cfc;font-size:10px;font-weight:700;"
+                  data-versions="<%= encodeURIComponent(JSON.stringify(asset.versions||[])) %>"
+                  onclick="showVersions(this)">Ver</button>
+                <form action="/asset/<%= asset._id %>/delete" method="POST" style="margin:0;" onsubmit="return confirm('Delete this file?')">
+                  <button type="submit" class="action-btn btn-del-sm" title="Delete">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                  </button>
+                </form>
+              </div>
+            </div>
+          <% }) %>
+        <% } %>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- UPLOAD MODAL -->
+  <div class="modal-overlay" id="uploadModal" onclick="if(event.target===this)this.classList.remove('open')">
+    <div class="modal">
+      <h3>📤 Upload New File</h3>
+      <form action="/upload" method="POST" enctype="multipart/form-data">
+        <input type="text" name="title" placeholder="File name..." required>
+
+        <select name="category" id="modalCategory" required onchange="updateSubType(this.value,'modal')">
+          <option value="">Select category...</option>
+          <option value="PDFs">PDFs</option>
+          <option value="Certificates">Certificates</option>
+          <option value="Personal ID">Personal ID</option>
+          <option value="Financial">Financial Docs</option>
+          <option value="Photos">Photos</option>
+          <option value="Property">Property</option>
+          <option value="Vehicle">Vehicle</option>
+          <option value="Travel">Travel</option>
+        </select>
+
+        <select name="subType" id="modalSubType" style="display:none;">
+          <option value="">Select type...</option>
+        </select>
+
+        <input type="text" name="issuedBy" id="modalIssuedBy" placeholder="Issued by (e.g. MIT, Government)..." style="display:none;">
+        <input type="date" name="expiryDate" id="modalExpiry" style="display:none;">
+
+        <textarea name="description" placeholder="Description (optional)..." rows="2"
+          style="width:100%;padding:12px 14px;border:1.5px solid #e0daf0;border-radius:10px;
+          font-family:'DM Sans',sans-serif;font-size:14px;color:#1a1132;background:#faf8ff;
+          margin-bottom:12px;outline:none;resize:vertical;"
+          onfocus="this.style.borderColor='#7c5cfc'" onblur="this.style.borderColor='#e0daf0'"></textarea>
+
+        <input type="file" name="file" required style="padding:10px;background:#fff;">
+        <div class="modal-btns">
+          <button type="button" class="btn-cancel" onclick="document.getElementById('uploadModal').classList.remove('open')">Cancel</button>
+          <button type="submit" class="btn-upload">Upload File</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- VERSION MODAL -->
+  <div class="modal-overlay" id="versionModal" onclick="if(event.target===this)this.classList.remove('open')">
+    <div class="modal" style="width:520px;">
+      <h3>📋 Version History</h3>
+      <div id="versionList" style="margin-top:8px;max-height:300px;overflow-y:auto;"></div>
+      <div class="modal-btns" style="margin-top:16px;">
+        <button type="button" class="btn-cancel" onclick="document.getElementById('versionModal').classList.remove('open')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT MODAL -->
+  <div class="modal-overlay" id="editModal" onclick="if(event.target===this)this.classList.remove('open')">
+    <div class="modal">
+      <h3>✏️ Edit File Details</h3>
+      <form id="editForm" method="POST">
+        <input type="text" name="title" id="editTitle" placeholder="File name..." required>
+
+        <select name="category" id="editCategory" required onchange="updateSubType(this.value,'edit')">
+          <option value="">Select category...</option>
+          <option value="PDFs">PDFs</option>
+          <option value="Certificates">Certificates</option>
+          <option value="Personal ID">Personal ID</option>
+          <option value="Financial">Financial Docs</option>
+          <option value="Photos">Photos</option>
+          <option value="Property">Property</option>
+          <option value="Vehicle">Vehicle</option>
+          <option value="Travel">Travel</option>
+        </select>
+
+        <select name="subType" id="editSubType" style="display:none;">
+          <option value="">Select type...</option>
+        </select>
+
+        <input type="text" name="issuedBy" id="editIssuedBy" placeholder="Issued by..." style="display:none;">
+        <input type="date" name="expiryDate" id="editExpiry" style="display:none;">
+
+        <textarea name="description" id="editDescription" placeholder="Description (optional)..." rows="2"
+          style="width:100%;padding:12px 14px;border:1.5px solid #e0daf0;border-radius:10px;
+          font-family:'DM Sans',sans-serif;font-size:14px;color:#1a1132;background:#faf8ff;
+          margin-bottom:12px;outline:none;resize:vertical;"
+          onfocus="this.style.borderColor='#7c5cfc'" onblur="this.style.borderColor='#e0daf0'"></textarea>
+
+        <div class="modal-btns">
+          <button type="button" class="btn-cancel" onclick="document.getElementById('editModal').classList.remove('open')">Cancel</button>
+          <button type="submit" class="btn-upload">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const subTypeOptions = {
+      'PDFs':        ['General Document', 'Contract', 'Report', 'Invoice', 'Receipt', 'Manual', 'Other'],
+      'Certificates':['Undergraduate', 'Masters', 'PhD', 'Professional Certificate', 'Award', 'Other'],
+      'Personal ID': ['Passport', "Driver's License", 'National ID', 'Birth Certificate', 'Visa', 'Other'],
+      'Financial':   ['Bank Statement', 'Tax Document', 'Invoice', 'Receipt', 'Insurance', 'Loan Document', 'Other'],
+      'Photos':      ['Personal Photo', 'Professional Photo', 'Event Photo', 'Travel Photo', 'Family Photo', 'Other'],
+      'Property':    ['Deed', 'Lease Agreement', 'Utility Bill', 'Mortgage', 'Sale Agreement', 'Other'],
+      'Vehicle':     ['Registration', 'Insurance', 'Service Record', 'Purchase Receipt', 'License Plate', 'Other'],
+      'Travel':      ['Visa', 'Itinerary', 'Booking Confirmation', 'Travel Insurance', 'Hotel Booking', 'Other']
+    };
+
+    function updateSubType(category, prefix) {
+      const sel    = document.getElementById(prefix === 'edit' ? 'editSubType'  : 'modalSubType');
+      const issued = document.getElementById(prefix === 'edit' ? 'editIssuedBy' : 'modalIssuedBy');
+      const expiry = document.getElementById(prefix === 'edit' ? 'editExpiry'   : 'modalExpiry');
+      const opts   = subTypeOptions[category];
+      if (opts) {
+        sel.innerHTML = '<option value="">Select type...</option>' +
+          opts.map(o => `<option value="${o}">${o}</option>`).join('');
+        sel.style.display = 'block';
+        sel.required = true;
+      } else {
+        sel.style.display = 'none';
+        sel.required = false;
+        sel.value = '';
+      }
+      issued.style.display = category ? 'block' : 'none';
+      expiry.style.display = category ? 'block' : 'none';
+    }
+
+    // Apply bar widths (avoids EJS-in-CSS linter errors)
+    document.querySelectorAll('[data-width]').forEach(el => {
+      el.style.width = el.dataset.width + '%';
+    });
+
+    function toggleStorageBody() {
+      document.getElementById('dashStorageBody').classList.toggle('open');
+      const ch = document.getElementById('dashStorageChevron');
+      ch.style.transform = ch.style.transform === 'rotate(180deg)' ? '' : 'rotate(180deg)';
+    }
+
+    function toggleCatFiles(i) {
+      event.stopPropagation();
+      document.getElementById('catFiles' + i).classList.toggle('open');
+    }
+
+
+    function openUploadModal(category) {
+      document.getElementById('modalCategory').value = category;
+      updateSubType(category, 'modal');
+      document.getElementById('uploadModal').classList.add('open');
+    }
+
+    function openEditModalFromBtn(btn) {
+      openEditModal({
+        id:          btn.dataset.id,
+        filename:    decodeURIComponent(btn.dataset.filename),
+        category:    btn.dataset.category,
+        subType:     decodeURIComponent(btn.dataset.subtype),
+        description: decodeURIComponent(btn.dataset.description),
+        issuedBy:    decodeURIComponent(btn.dataset.issuedby),
+        expiryDate:  btn.dataset.expiry
+      });
+    }
+
+    function openEditModal(asset) {
+      document.getElementById('editForm').action = '/asset/' + asset.id + '/edit';
+      document.getElementById('editTitle').value       = asset.filename;
+      document.getElementById('editDescription').value = asset.description;
+      document.getElementById('editIssuedBy').value    = asset.issuedBy;
+      document.getElementById('editExpiry').value      = asset.expiryDate;
+      document.getElementById('editCategory').value    = asset.category;
+      updateSubType(asset.category, 'edit');
+      setTimeout(() => { document.getElementById('editSubType').value = asset.subType; }, 0);
+      document.getElementById('editModal').classList.add('open');
+    }
+
+    async function shareAsset(id) {
+      try {
+        const res = await fetch('/asset/' + id + '/share', { method: 'POST' });
+        const data = await res.json();
+        const url = window.location.origin + '/share/' + data.token;
+        await navigator.clipboard.writeText(url);
+        alert('Share link copied to clipboard!');
+      } catch (e) {
+        alert('Failed to generate share link.');
+      }
+    }
+
+    function showVersions(btn) {
+      const versions = JSON.parse(decodeURIComponent(btn.dataset.versions));
+      const list = document.getElementById('versionList');
+      if (!versions || versions.length === 0) {
+        list.innerHTML = '<p style="color:#a99cc5;font-size:14px;padding:12px 0;">No previous versions. This is the original file.</p>';
+      } else {
+        list.innerHTML = versions.map((v, i) => {
+          const sz = v.fileSize < 1048576 ? (v.fileSize/1024).toFixed(1)+' KB' : (v.fileSize/1048576).toFixed(1)+' MB';
+          const dt = new Date(v.uploadDate).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+          return `<div style="padding:12px 0;border-bottom:1px solid #f0ecf7;">
+            <div style="font-size:13px;font-weight:600;color:#1a1132;">Version ${versions.length - i}</div>
+            <div style="font-size:12px;color:#a99cc5;margin-top:2px;">${dt} &middot; ${sz}</div>
+            <a href="/${v.filePath}" target="_blank" style="font-size:12px;color:#7c5cfc;text-decoration:none;font-weight:600;">Download</a>
+          </div>`;
+        }).join('');
+      }
+      document.getElementById('versionModal').classList.add('open');
+    }
+  </script>
+
 </body>
 </html>

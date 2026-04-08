@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Verify OTP - Asset Management</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="login-page">
+  <div class="login-wrapper">
+    <h1 class="main-title">Digital Asset Locker</h1>
+    <div class="login-container">
+      <h2>Verify Your Email</h2>
+      <p style="color:#a99cc5;margin-bottom:16px;">An OTP was sent to <strong style="color:#1a1132;"><%= email %></strong></p>
+      <% if (error) { %>
+        <div class="error-msg"><%= error %></div>
+      <% } %>
+      <form action="/verify-otp" method="POST">
+        <div class="input-group">
+          <input type="text" name="otp" placeholder="Enter 6-digit OTP" maxlength="6" required autocomplete="off" style="letter-spacing:6px;font-size:22px;text-align:center;">
+        </div>
+        <button type="submit" class="login-btn">Verify OTP</button>
+      </form>
+      <form action="/resend-otp" method="POST" style="margin-top:12px;">
+        <button type="submit" class="resend-btn">Resend OTP</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

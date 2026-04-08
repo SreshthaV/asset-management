@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= asset.filename %> - Digital Asset Locker</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: linear-gradient(135deg, #1a1132 0%, #4a2d8f 100%);
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 40px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.3);
+    }
+    .brand {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 32px;
+    }
+    .brand-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: #7c5cfc; display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .brand-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 16px; color: #1a1132; font-weight: 700;
+    }
+    .file-icon {
+      font-size: 56px; margin-bottom: 16px; display: block;
+    }
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px; color: #1a1132; margin-bottom: 8px;
+      word-break: break-word;
+    }
+    .category-badge {
+      display: inline-block; font-size: 12px; font-weight: 700;
+      padding: 4px 12px; border-radius: 20px;
+      background: #f0ecf7; color: #7c5cfc; margin-bottom: 24px;
+    }
+    .meta-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      margin-bottom: 28px;
+    }
+    .meta-item {
+      background: #faf8ff; border-radius: 12px; padding: 14px 16px;
+    }
+    .meta-label {
+      font-size: 11px; color: #a99cc5; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;
+    }
+    .meta-value {
+      font-size: 14px; color: #1a1132; font-weight: 600;
+    }
+    .meta-value.empty { color: #c4b5fd; font-weight: 400; font-style: italic; }
+    .description-box {
+      background: #faf8ff; border-radius: 12px; padding: 14px 16px;
+      margin-bottom: 28px;
+    }
+    .description-box .meta-label { margin-bottom: 6px; }
+    .description-box p { font-size: 14px; color: #4a4a6a; line-height: 1.5; }
+    .download-btn {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; padding: 14px 24px;
+      background: #7c5cfc; color: #fff;
+      border-radius: 12px; font-family: 'DM Sans', sans-serif;
+      font-size: 15px; font-weight: 700; text-decoration: none;
+      transition: background 0.2s; margin-bottom: 20px;
+    }
+    .download-btn:hover { background: #6b4ef0; }
+    .footer-note {
+      text-align: center; font-size: 12px; color: #a99cc5;
+      padding-top: 16px; border-top: 1px solid #f0ecf7;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">
+      <div class="brand-icon">🔒</div>
+      <div class="brand-name">Digital Asset Locker</div>
+    </div>
+
+    <span class="file-icon">
+      <% if (asset.category === 'PDFs') { %>📄
+      <% } else if (asset.category === 'Certificates') { %>🎓
+      <% } else if (asset.category === 'Personal ID') { %>👤
+      <% } else if (asset.category === 'Financial') { %>💰
+      <% } else if (asset.category === 'Photos') { %>🖼️
+      <% } else if (asset.category === 'Property') { %>🏠
+      <% } else if (asset.category === 'Vehicle') { %>🚗
+      <% } else if (asset.category === 'Travel') { %>✈️
+      <% } else { %>📁<% } %>
+    </span>
+
+    <h1><%= asset.filename %></h1>
+    <span class="category-badge"><%= asset.category %><% if (asset.subType) { %> &middot; <%= asset.subType %><% } %></span>
+
+    <div class="meta-grid">
+      <div class="meta-item">
+        <div class="meta-label">Issued By</div>
+        <div class="meta-value <%= !asset.issuedBy ? 'empty' : '' %>">
+          <%= asset.issuedBy || 'Not specified' %>
+        </div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Expiry Date</div>
+        <div class="meta-value <%= !asset.expiryDate ? 'empty' : '' %>">
+          <% if (asset.expiryDate) { %>
+            <%= new Date(asset.expiryDate).toLocaleDateString('en-US', {year:'numeric', month:'short', day:'numeric'}) %>
+          <% } else { %>
+            No expiry
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <% if (asset.description) { %>
+    <div class="description-box">
+      <div class="meta-label">Description</div>
+      <p><%= asset.description %></p>
+    </div>
+    <% } %>
+
+    <a href="/<%= asset.filePath %>" target="_blank" class="download-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download File
+    </a>
+
+    <div class="footer-note">
+      This file was shared via Digital Asset Locker
+    </div>
+  </div>
+</body>
+</html>

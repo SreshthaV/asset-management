@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Profile - Digital Asset Locker</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: #f5f5f7; overflow-x: hidden; }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 72px; min-height: 100vh; background: #1a1132;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 16px 0; gap: 4px; position: fixed; left: 0; top: 0; z-index: 100;
+    }
+    .sidebar-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: #7c5cfc; color: #fff; font-size: 16px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px; text-decoration: none; border: none; cursor: pointer;
+    }
+    .sidebar-item {
+      width: 48px; height: 48px; border-radius: 12px; border: none; cursor: pointer;
+      background: transparent; color: #a99cc5;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 3px; transition: all 0.2s;
+      text-decoration: none; font-size: 9px; font-family: 'DM Sans', sans-serif;
+    }
+    .sidebar-item:hover, .sidebar-item.active { background: #2d2250; color: #fff; }
+    .sidebar-spacer { flex: 1; }
+
+    .main { margin-left: 72px; min-height: 100vh; display: flex; flex-direction: column; }
+
+    .topbar {
+      position: fixed; top: 0; left: 72px; right: 0; height: 56px;
+      background: #fff; border-bottom: 1px solid #ececec;
+      display: flex; align-items: center; padding: 0 32px;
+      gap: 16px; z-index: 50;
+    }
+    .topbar h1 { font-size: 18px; font-weight: 700; color: #1a1132; flex: 1; }
+
+    .profile-layout { margin-top: 56px; display: flex; flex: 1; min-height: calc(100vh - 56px); }
+
+    .profile-nav {
+      width: 260px; background: #fff; border-right: 1px solid #ececec;
+      padding: 24px 16px; position: sticky; top: 56px; height: calc(100vh - 56px);
+    }
+    .profile-nav-item {
+      display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+      border-radius: 10px; cursor: pointer; transition: all 0.15s;
+      text-decoration: none; color: #4a4a6a; font-size: 14px; font-weight: 500;
+      border: none; background: none; width: 100%; text-align: left;
+    }
+    .profile-nav-item:hover { background: #f0ecf7; color: #1a1132; }
+    .profile-nav-item.active { background: #ede8ff; color: #7c5cfc; font-weight: 600; }
+
+    .profile-content { flex: 1; padding: 32px 40px; background: #f5f5f7; }
+    .profile-content h2 { font-size: 22px; font-weight: 700; color: #1a1132; margin-bottom: 24px; }
+    .section-label { font-size: 12px; color: #a99cc5; font-weight: 600; text-transform: uppercase; margin-bottom: 12px; }
+
+    .info-card { background: #fff; border-radius: 14px; box-shadow: 0 1px 4px rgba(26,17,50,0.05); margin-bottom: 24px; }
+    .info-row { display: flex; align-items: center; padding: 20px 24px; border-bottom: 1px solid #f5f3ff; gap: 16px; }
+    .info-row:last-child { border-bottom: none; }
+    .info-text p { font-size: 14px; font-weight: 600; color: #1a1132; }
+    .info-text span { font-size: 12px; color: #a99cc5; }
+
+    .storage-bar-bg { height: 6px; background: #f0ecf7; border-radius: 3px; overflow: hidden; width: 200px; }
+    .storage-bar-fill { height: 100%; background: #7c5cfc; transition: width 0.5s; }
+
+    .storage-clickable { cursor: pointer; }
+    .storage-clickable:hover .info-text p { color: #7c5cfc; }
+    .storage-list { display: none; border-top: 1px solid #f5f3ff; }
+    .storage-list.open { display: block; }
+    .storage-file-row {
+      display: flex; align-items: center; padding: 12px 24px;
+      border-bottom: 1px solid #f9f7ff; gap: 12px;
+    }
+    .storage-file-row:last-child { border-bottom: none; }
+    .storage-file-icon {
+      width: 36px; height: 36px; border-radius: 8px; background: #f0ecf7;
+      display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
+    }
+    .storage-file-info { flex: 1; min-width: 0; }
+    .storage-file-name { font-size: 13px; font-weight: 600; color: #1a1132; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .storage-file-meta { font-size: 11px; color: #a99cc5; margin-top: 2px; }
+    .storage-file-size { font-size: 12px; font-weight: 600; color: #7c5cfc; flex-shrink: 0; width: 70px; text-align: right; }
+    .storage-mini-bar { width: 80px; height: 4px; background: #f0ecf7; border-radius: 2px; overflow: hidden; flex-shrink: 0; }
+    .storage-mini-fill { height: 100%; background: #7c5cfc; border-radius: 2px; }
+    .btn-del-file {
+      width: 28px; height: 28px; border-radius: 7px; border: none; cursor: pointer;
+      background: #fff0f0; color: #e53e3e; display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0; transition: background 0.2s;
+    }
+    .btn-del-file:hover { background: #ffe4e4; }
+    .chevron { transition: transform 0.2s; display: inline-block; margin-left: 6px; color: #a99cc5; }
+    .chevron.open { transform: rotate(180deg); }
+
+    .toggle { width: 44px; height: 24px; border-radius: 12px; background: #d4cde5; position: relative; border: none; cursor: pointer; }
+    .toggle.on { background: #7c5cfc; }
+    .toggle::after { content: ''; width: 18px; height: 18px; border-radius: 50%; background: #fff; position: absolute; top: 3px; left: 3px; transition: 0.2s; }
+    .toggle.on::after { left: 23px; }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+  <a href="/profile" class="sidebar-avatar" style="text-decoration: none;">
+    <%= user.email[0].toUpperCase() %>
+  </a>
+
+  <a href="/dashboard" class="sidebar-item <%= currentPage === 'dashboard' ? 'active' : '' %>" title="Home">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Home
+  </a>
+
+  <a href="/files" class="sidebar-item <%= currentPage === 'files' ? 'active' : '' %>" title="My Files">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+    Files
+  </a>
+
+  <div class="sidebar-spacer"></div>
+  
+  <a href="/logout" class="sidebar-item" title="Logout">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Logout
+  </a>
+</div>
+
+  <div class="main">
+    <div class="topbar">
+      <h1>Profile Settings</h1>
+    </div>
+
+    <div class="profile-layout">
+      <div class="profile-nav">
+        <a href="/profile?tab=account" class="profile-nav-item <%= tab === 'account' ? 'active' : '' %>">
+          Account
+        </a>
+        <a href="/profile?tab=settings" class="profile-nav-item <%= tab === 'settings' ? 'active' : '' %>">
+          Settings
+        </a>
+        <a href="/profile?tab=help" class="profile-nav-item <%= tab === 'help' ? 'active' : '' %>">
+          Passwords & Help
+        </a>
+      </div>
+
+      <div class="profile-content">
+        <% if (tab === 'account') { %>
+          <h2>Account Details</h2>
+          <div class="section-label">User Information</div>
+          <div class="info-card">
+            <div class="info-row">
+              <div class="info-text">
+                <p><%= user.email %></p>
+                <span>Role: <%= user.role %></span>
+              </div>
+            </div>
+            <div class="info-row storage-clickable" onclick="toggleStorage()">
+              <div class="info-text">
+                <p>Storage Usage <span class="chevron" id="storageChevron">▾</span></p>
+                <span><%= totalSize %> / 3.0 GB Used &middot; <%= assets.length %> file<%= assets.length !== 1 ? 's' : '' %></span>
+              </div>
+              <div style="margin-left:auto;">
+                <div class="storage-bar-bg">
+                  <div class="storage-bar-fill" data-width="<%= storagePercent %>"></div>
+                </div>
+                <div style="font-size:11px;color:#a99cc5;text-align:right;margin-top:4px;"><%= storagePercent %>%</div>
+              </div>
+            </div>
+
+            <!-- Per-file storage list -->
+            <div class="storage-list" id="storageList">
+              <% if (assets.length === 0) { %>
+                <div style="padding:20px 24px;font-size:13px;color:#a99cc5;">No files uploaded yet.</div>
+              <% } %>
+              <% assets.forEach(asset => { %>
+                <%
+                  const size = asset.fileSize || 0;
+                  const sizeLabel = size < 1048576 ? (size/1024).toFixed(1)+' KB' : (size/1048576).toFixed(1)+' MB';
+                  const pct = totalBytes > 0 ? Math.round((size/totalBytes)*100) : 0;
+                  const icon = asset.category === 'PDFs' ? '📄'
+                    : asset.category === 'Certificates' ? '🎓'
+                    : asset.category === 'Personal ID' ? '👤'
+                    : asset.category === 'Financial' ? '💰'
+                    : asset.category === 'Photos' ? '🖼️'
+                    : asset.category === 'Property' ? '🏠'
+                    : asset.category === 'Vehicle' ? '🚗'
+                    : asset.category === 'Travel' ? '✈️' : '📁';
+                %>
+                <div class="storage-file-row">
+                  <div class="storage-file-icon"><%= icon %></div>
+                  <div class="storage-file-info">
+                    <div class="storage-file-name"><%= asset.filename %></div>
+                    <div class="storage-file-meta"><%= asset.category %><% if (asset.subType) { %> &middot; <%= asset.subType %><% } %></div>
+                  </div>
+                  <div class="storage-mini-bar">
+                    <div class="storage-mini-fill" data-width="<%= pct %>"></div>
+                  </div>
+                  <div class="storage-file-size"><%= sizeLabel %></div>
+                  <form action="/asset/<%= asset._id %>/delete" method="POST" style="margin:0;" onsubmit="return confirm('Delete <%= asset.filename %>?')">
+                    <button type="submit" class="btn-del-file" title="Delete">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                    </button>
+                  </form>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+
+        <% } else if (tab === 'settings') { %>
+          <h2>Application Settings</h2>
+          <div class="info-card">
+            <div class="info-row">
+              <div class="info-text">
+                <p>Dark Mode</p>
+                <span>Switch to dark interface</span>
+              </div>
+              <button class="toggle" onclick="this.classList.toggle('on')"></button>
+            </div>
+          </div>
+
+        <% } else if (tab === 'help') { %>
+          <h2>Security & Support</h2>
+          <div class="info-card">
+            <div class="info-row"><p>Change Password</p></div>
+            <div class="info-row"><p>Support Center</p></div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.querySelectorAll('[data-width]').forEach(el => {
+      el.style.width = el.dataset.width + '%';
+    });
+
+    function toggleStorage() {
+      const list = document.getElementById('storageList');
+      const chevron = document.getElementById('storageChevron');
+      list.classList.toggle('open');
+      chevron.classList.toggle('open');
+    }
+  </script>
+</body>
+</html>
